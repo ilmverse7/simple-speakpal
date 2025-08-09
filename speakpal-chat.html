@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SpeakPal + Chat</title>
+  <style>
+    body {
+      display: flex;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f0f0f0;
+    }
+    #chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 2px solid #ccc;
+      background: white;
+    }
+    #messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      border-bottom: 1px solid #ccc;
+    }
+    #inputForm {
+      display: flex;
+      padding: 10px;
+    }
+    #inputForm input {
+      flex: 1;
+      padding: 8px;
+      font-size: 1rem;
+    }
+    #inputForm button {
+      padding: 8px 15px;
+      margin-left: 5px;
+    }
+    #speechPractice {
+      flex: 1;
+      padding: 20px;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    #phrase {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+    button {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="chat">
+    <div id="messages"></div>
+    <form id="inputForm">
+      <input type="text" id="chatInput" placeholder="Type your message..." autocomplete="off" />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+  <div id="speechPractice">
+    <div id="phrase">Hello, how are you?</div>
+    <button id="startSpeaking">Start Speaking</button>
+    <div id="result" style="margin-top:20px; font-weight:bold;"></div>
+  </div>
+
+<script>
+  // Chat logic
+  const messages = document.getElementById('messages');
+  const inputForm = document.getElementById('inputForm');
+  const chatInput = document.getElementById('chatInput');
+
+  inputForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const msg = chatInput.value.trim();
+    if (!msg) return;
+
+    // Display user message
+    const userMsg = document.createElement('div');
+    userMsg.textContent = "You: " + msg;
+    messages.appendChild(userMsg);
+    messages.scrollTop = messages.scrollHeight;
+
+    // Clear input
+    chatInput.value = '';
+
+    // Simple bot reply
+    setTimeout(() => {
+      const botMsg = document.createElement('div');
+      botMsg.textContent = "Bot: " + getBotReply(msg);
+      messages.appendChild(botMsg);
+      messages.scrollTop = messages.scrollHeight;
+    }, 800);
+  });
+
+  function getBotReply(userMsg) {
+    // Simple keyword-based replies
+    if (userMsg.toLowerCase().includes('hello')) return "Hi there!";
+    if (userMsg.toLowerCase().includes('how are you')) return "I'm just a bot, but I'm good!";
+    return "I heard you say: " + userMsg;
+  }
+
+  // Speech practice logic
+  const phrases = [
+    "Hello, how are you?",
+    "What is your name?",
+    "I like to learn languages.",
+    "Can you help me practice speaking?",
+    "Thank you for your help!"
+  ];
+
+  let currentPhraseIndex = 0;
+  const phraseEl = document.getElementById('phrase');
+  const resultEl = document.getElementById('result');
+  const startBtn = document.getElementById('startSpeaking');
+
+  startBtn.addEventListener('click', () => {
+    resultEl.textContent = '';
+    startSpeechRecognition();
+  });
+
+  function startSpeechRecognition() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      resultEl.textContent = "Sorry, your browser doesn't support speech recognition.";
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.start();
+
+    recognition.onresult = (event) => {
+      const spokenText = event.results[0][0].transcript;
+      checkPhraseMatch(spokenText);
+    };
+
+    recognition.onerror = (event) => {
+      resultEl.textContent = "Error occurred in recognition: " + event.error;
+    };
+  }
+
+  function checkPhraseMatch(spoken) {
+    const target = phrases[currentPhraseIndex];
+    if (spoken.toLowerCase().trim() === target.toLowerCase()) {
+      resultEl.textContent = "Great job! You said it correctly.";
+      nextPhrase();
+    } else {
+      resultEl.textContent = `You said: "${spoken}". Try again!`;
+    }
+  }
+
+  function nextPhrase() {
+    currentPhraseIndex = (currentPhraseIndex + 1) % phrases.length;
+    phraseEl.textContent = phrases[currentPhraseIndex];
+  }
+</script>
+
+</body>
+</html>
